@@ -1,4 +1,14 @@
 <template>
-  <ChatAvatar />
-  <div class="chat-bubble">STELLAR! STELLAR!</div>
+  <ChatAvatar :username="username" />
+  <div class="chat-bubble">{{ msg }}</div>
 </template>
+
+<script setup lang="ts">
+interface Props {
+  username: string;
+  msg: string;
+}
+
+const props = defineProps<Props>()
+const { username, msg } = props;
+</script>

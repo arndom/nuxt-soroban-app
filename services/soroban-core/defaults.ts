@@ -1,6 +1,5 @@
 import * as StellarSdk from '@stellar/stellar-sdk'
 import { SorobanRpc } from '@stellar/stellar-sdk'
-import type { SorobanContextType } from './soroban-context-types'
 
 /**
  * Default Soroban context object.

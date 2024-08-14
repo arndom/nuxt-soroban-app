@@ -45,7 +45,6 @@ export interface SorobanProviderProps {
   autoconnect?: boolean
   chains: WalletChain[]
   activeChain?: WalletChain // To set on frontend to define the default chain for read-only. Example: standalone
-  // children:  React.ReactNode
   connectors: Connector[]
   server?: StellarSdk.SorobanRpc.Server // To set on frontend to define the default server url for read-only. Example 'new Server('http://localhost:8000/soroban/rpc',{allowHttp:true})'
   serverHorizon?: StellarSdk.Horizon.Server

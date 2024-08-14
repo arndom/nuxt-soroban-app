@@ -3,208 +3,16 @@
 </template>
 
 <script setup lang="ts">
-import { defaultSorobanContext } from "~/services/soroban-core/soroban-context-defaults";
-import type { SorobanContextType, SorobanProviderProps } from "~/services/soroban-core/soroban-context-types"
-import { fromURLToHorizonServer, fromURLToServer, networkToActiveChain } from "~/services/soroban-core/soroban-context-utils";
+import { fromURLToHorizonServer, fromURLToServer, networkToActiveChain } from "~/services/soroban-core/utils";
 import * as StellarSdk from '@stellar/stellar-sdk'
 import type { Connector, WalletChain } from "@soroban-react/types";
 
-const props = withDefaults(defineProps<SorobanProviderProps>(), {
-  autoconnect: false,
-  deployments: () => [],
-  server: () => defaultSorobanContext.server,
-  serverHorizon: () => defaultSorobanContext.serverHorizon
-})
-
-const { appName, autoconnect, chains, activeChain, connectors, deployments } = props;
-let { server, serverHorizon } = props;
-
-const activeConnector =
-  connectors.length && connectors.length > 1 ? connectors[1] : connectors[0];
-
 const isConnectedRef = ref(false)
-console.log('SorobanReactProvider is RELOADED')
-
-if (activeChain?.sorobanRpcUrl) {
-  server = fromURLToServer(activeChain.sorobanRpcUrl)
-}
-
-if (activeChain?.networkUrl) {
-  serverHorizon = fromURLToHorizonServer(activeChain.networkUrl)
-}
-
-// const mySorobanContext: Ref<SorobanContextType> = ref({
-//   ...defaultSorobanContext,
-//   deployments,
-//   appName,
-//   autoconnect,
-//   chains,
-//   connectors,
-//   activeConnector,
-//   activeChain,
-//   server,
-//   serverHorizon,
-
-//   connect: async () => {
-//     console.log('ENTERING CONNECT with context: ', mySorobanContext)
-
-//     if (mySorobanContext.value.activeConnector) {
-//       // Now we will check if the wallet is freighter so that we keep the old way of choosing the network from the wallet for backward compatibility
-//       if (mySorobanContext.value.activeConnector.id === 'freighter') {
-//         let networkDetails =
-//           await mySorobanContext.value.activeConnector.getNetworkDetails()
-
-//         //TODO: TEMP FIX while waiting for freighter to fix soroban public rpc https://github.com/stellar/freighter/issues/1335
-//         if (networkDetails.sorobanRpcUrl === "http://soroban-rpc-pubnet-prd.soroban-rpc-pubnet-prd.svc.cluster.local:8000") {
-//           networkDetails.sorobanRpcUrl = "https://mainnet.stellar.validationcloud.io/v1/XFb5Lma6smizBnnRPEgYMbuNm0K3FWzJ7854GNSQ2EY"
-//         }
-
-//         let activeChain = networkToActiveChain(networkDetails, chains)
-
-//         if (
-//           !chains.find(
-//             (c: any) =>
-//               c.networkPassphrase === networkDetails?.networkPassphrase
-//           )
-//         ) {
-//           const error = new Error(
-//             'Your Wallet network is not supported in this app'
-//           )
-//           throw error
-//         }
-
-//         if (!networkDetails?.sorobanRpcUrl) {
-//           const error = new Error(
-//             'Soroban RPC URL is not set, please check your freighter wallet network configuration'
-//           )
-//           throw error
-//         }
-
-//         server =
-//           networkDetails &&
-//           new StellarSdk.SorobanRpc.Server(networkDetails.sorobanRpcUrl, {
-//             allowHttp: networkDetails.sorobanRpcUrl.startsWith('http://'),
-//           })
-
-//         serverHorizon =
-//           networkDetails &&
-//           new StellarSdk.Horizon.Server(networkDetails.networkUrl, {
-//             allowHttp: networkDetails.networkUrl.startsWith('http://'),
-//           })
-
-//         console.log(
-//           'SorobanReactProvider: Connecting with FREIGHTER : ',
-//           mySorobanContext.value.activeConnector.name
-//         )
-
-//         let address = await mySorobanContext.value.activeConnector.getPublicKey()
-
-//         // Now we can track that the wallet is finally connected
-//         isConnectedRef.value = true
-
-//         // setSorobanContext((c: any) => ({
-//         //   ...c,
-//         //   activeChain,
-//         //   address,
-//         //   server,
-//         //   serverHorizon,
-//         // }))
-
-//         mySorobanContext.value.activeChain = activeChain
-//         mySorobanContext.value.address = address
-//         mySorobanContext.value.server = server
-//         mySorobanContext.value.serverHorizon = serverHorizon
-//       }
-//       // If connector is any other wallet that does not have getNetworkDetails we will need to set the active chain and server from somewehere else in the front end
-//       else {
-//         console.log(
-//           'SorobanReactProvider: Connecting with ',
-//           mySorobanContext.value.activeConnector.name
-//         )
-//         let address = await mySorobanContext.value.activeConnector.getPublicKey()
-
-//         // Now we can track that the wallet is finally connected
-//         isConnectedRef.value = true
-
-//         // setSorobanContext((c: any) => ({
-//         //   ...c,
-//         //   address,
-//         // }))
-
-//         mySorobanContext.value.address = address
-//       }
-//     } else {
-//       console.log('SorobanReactProvider: No active Connector')
-//     }
-//   },
-
-//   disconnect: async () => {
-//     isConnectedRef.value = false
-
-//     // TODO: Maybe reset address to undefined
-//     // TODO: Handle other things here, such as perhaps resetting address to undefined.
-//     let address = undefined
-
-//     // setSorobanContext((c: any) => ({
-//     //   ...c,
-//     //   address,
-//     // }))
-
-//     mySorobanContext.value.address = address
-//   },
-
-//   setActiveChain: (chain: WalletChain) => {
-//     console.log('Chainging activeChain to : ', chain)
-
-//     // When the user in frontend changes the activeChain to read the blockchain without wallet
-//     let server: StellarSdk.SorobanRpc.Server | undefined = undefined,
-//       serverHorizon: StellarSdk.Horizon.Server | undefined = undefined
-//     const _activeChain = chain
-
-//     if (_activeChain.sorobanRpcUrl) {
-//       server = fromURLToServer(_activeChain.sorobanRpcUrl)
-//     }
-
-//     if (_activeChain.networkUrl) {
-//       serverHorizon = fromURLToHorizonServer(_activeChain.networkUrl)
-//     }
-
-//     // setSorobanContext((c: any) => ({
-//     //   ...c,
-//     //   server,
-//     //   serverHorizon,
-//     //   activeChain,
-//     // }))
-
-//     mySorobanContext.value.server = server
-//     mySorobanContext.value.serverHorizon = serverHorizon
-//     mySorobanContext.value.activeChain = _activeChain
-
-
-//   },
-
-//   setActiveConnectorAndConnect: async (connector: Connector) => {
-//     console.log('Changing connector to ', connector.name)
-//     let activeConnector = connector
-
-//     console.log('SorobanReactProvider: Changing connector')
-
-//     // We better connect here otherwise in the frontend the context is not updated fast enough, and the user connects to the old connector first.
-//     let address = await activeConnector.getPublicKey()
-
-//     isConnectedRef.value = true
-
-//     // setSorobanContext((c: any) => ({
-//     //   ...c,
-//     //   activeConnector,
-//     //   address,
-//     // }))
-//     mySorobanContext.value.activeConnector = activeConnector
-//     mySorobanContext.value.address = address
-//   },
-// })
+console.log('SorobanProvider is RELOADED')
 
 const mySorobanContext = useSoroban();
+
+const { chains, server, serverHorizon } = mySorobanContext.value;
 
 callOnce(() => {
   mySorobanContext.value.connect = async () => {
@@ -242,20 +50,21 @@ callOnce(() => {
           throw error
         }
 
-        server =
-          networkDetails &&
-          new StellarSdk.SorobanRpc.Server(networkDetails.sorobanRpcUrl, {
+        let newServer = server;
+        let newServerHorizion = serverHorizon;
+
+        if (networkDetails) {
+          newServer = new StellarSdk.SorobanRpc.Server(networkDetails.sorobanRpcUrl, {
             allowHttp: networkDetails.sorobanRpcUrl.startsWith('http://'),
           })
 
-        serverHorizon =
-          networkDetails &&
-          new StellarSdk.Horizon.Server(networkDetails.networkUrl, {
+          newServerHorizion = new StellarSdk.Horizon.Server(networkDetails.networkUrl, {
             allowHttp: networkDetails.networkUrl.startsWith('http://'),
           })
+        }
 
         console.log(
-          'SorobanReactProvider: Connecting with FREIGHTER : ',
+          'SorobanProvider: Connecting with FREIGHTER : ',
           mySorobanContext.value.activeConnector.name
         )
 
@@ -264,23 +73,15 @@ callOnce(() => {
         // Now we can track that the wallet is finally connected
         isConnectedRef.value = true
 
-        // setSorobanContext((c: any) => ({
-        //   ...c,
-        //   activeChain,
-        //   address,
-        //   server,
-        //   serverHorizon,
-        // }))
-
         mySorobanContext.value.activeChain = activeChain
         mySorobanContext.value.address = address
-        mySorobanContext.value.server = server
-        mySorobanContext.value.serverHorizon = serverHorizon
+        mySorobanContext.value.server = newServer
+        mySorobanContext.value.serverHorizon = newServerHorizion
       }
       // If connector is any other wallet that does not have getNetworkDetails we will need to set the active chain and server from somewehere else in the front end
       else {
         console.log(
-          'SorobanReactProvider: Connecting with ',
+          'SorobanProvider: Connecting with ',
           mySorobanContext.value.activeConnector.name
         )
         let address = await mySorobanContext.value.activeConnector.getPublicKey()
@@ -288,15 +89,10 @@ callOnce(() => {
         // Now we can track that the wallet is finally connected
         isConnectedRef.value = true
 
-        // setSorobanContext((c: any) => ({
-        //   ...c,
-        //   address,
-        // }))
-
         mySorobanContext.value.address = address
       }
     } else {
-      console.log('SorobanReactProvider: No active Connector')
+      console.log('SorobanProvider: No active Connector')
     }
   }
 
@@ -307,12 +103,8 @@ callOnce(() => {
     // TODO: Handle other things here, such as perhaps resetting address to undefined.
     let address = undefined
 
-    // setSorobanContext((c: any) => ({
-    //   ...c,
-    //   address,
-    // }))
-
     mySorobanContext.value.address = address
+    console.log("Disconnected")
   }
 
   mySorobanContext.value.setActiveChain = (chain: WalletChain) => {
@@ -331,41 +123,29 @@ callOnce(() => {
       serverHorizon = fromURLToHorizonServer(_activeChain.networkUrl)
     }
 
-    // setSorobanContext((c: any) => ({
-    //   ...c,
-    //   server,
-    //   serverHorizon,
-    //   activeChain,
-    // }))
-
     mySorobanContext.value.server = server
     mySorobanContext.value.serverHorizon = serverHorizon
     mySorobanContext.value.activeChain = _activeChain
   }
 
   mySorobanContext.value.setActiveConnectorAndConnect = async (connector: Connector) => {
-    console.log('Changing connector to ', connector.name)
+  console.log('Changing connector to ', connector.name)
     let activeConnector = connector
 
-    console.log('SorobanReactProvider: Changing connector')
+    console.log('SorobanProvider: Changing connector')
 
     // We better connect here otherwise in the frontend the context is not updated fast enough, and the user connects to the old connector first.
     let address = await activeConnector.getPublicKey()
 
     isConnectedRef.value = true
 
-    // setSorobanContext((c: any) => ({
-    //   ...c,
-    //   activeConnector,
-    //   address,
-    // }))
     mySorobanContext.value.activeConnector = activeConnector
     mySorobanContext.value.address = address
   }
 })
 
 console.log(
-  'SorobanReactProvider: Active connector is ',
+  'SorobanProvider: Active connector is ',
   mySorobanContext.value.activeConnector?.name
 )
 
@@ -405,14 +185,14 @@ watch(mySorobanContext, (newID, oldID, onCleanup) => {
 
         if (mySorobanContext.value.address !== address) {
           console.log(
-            'SorobanReactProvider: address changed from:',
+            'SorobanProvider: address changed from:',
             mySorobanContext.value.address,
             ' to: ',
             address
           )
           hasNoticedWalletUpdate = true
 
-          console.log('SorobanReactProvider: reconnecting')
+          console.log('SorobanProvider: reconnecting')
 
           // setSorobanContext((c: any) => ({
           //   ...c,
@@ -425,7 +205,7 @@ watch(mySorobanContext, (newID, oldID, onCleanup) => {
         // will get handled. Otherwise React could complain. I believe that eventually it may cause huge
         // problems, but that might be a NodeJS specific approach to exceptions not handled in promises.
 
-        console.error('SorobanReactProvider: error: ', error)
+        console.error('SorobanProvider: error: ', error)
       } finally {
         if (!hasNoticedWalletUpdate)
           timeoutId = setTimeout(
@@ -482,7 +262,7 @@ watch(mySorobanContext, (newID, oldID, onCleanup) => {
             mySorobanContext.value?.activeChain?.sorobanRpcUrl)
         ) {
           console.log(
-            'SorobanReactProvider: network changed from:',
+            'SorobanProvider: network changed from:',
             mySorobanContext.value.activeChain.networkPassphrase,
             ' to: ',
             newActiveChain.networkPassphrase
@@ -493,7 +273,7 @@ watch(mySorobanContext, (newID, oldID, onCleanup) => {
             mySorobanContext.value.setActiveChain(newActiveChain)
         }
       } catch (error) {
-        console.error('SorobanReactProvider: error: ', error)
+        console.error('SorobanProvider: error: ', error)
       } finally {
         if (!hasNoticedWalletUpdate)
           timeoutId = setTimeout(
