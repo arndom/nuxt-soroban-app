@@ -1,3 +1,24 @@
+<script setup lang="ts">
+  import { getShortAddress } from '../utils';
+
+  const mySorobanContext = useSoroban();
+
+  const { disconnect, setActiveConnectorAndConnect, connectors: browserWallets } = mySorobanContext.value;
+
+  // toRef to make the address property reactive for the template
+  const address = toRef(mySorobanContext.value, "address")
+
+  const handleConnect = () => {
+    if (!setActiveConnectorAndConnect) return;
+    setActiveConnectorAndConnect(browserWallets[0]);
+  }
+
+  const handleDisconnect = async () => {
+    console.log("Disconnecting");
+    await disconnect();
+  }
+</script>
+
 <template>
   <div v-if="!address">
     <button class="btn btn-accent" @click="handleConnect">
@@ -10,24 +31,3 @@
     Account: <span class="font-bold">{{ getShortAddress(address) }}</span>
   </button>
 </template>
-
-<script setup lang="ts">
-import { getShortAddress } from '../utils';
-
-const mySorobanContext = useSoroban();
-
-const { disconnect, setActiveConnectorAndConnect, connectors: browserWallets } = mySorobanContext.value;
-
-// toRef to make the address property reactive for the template
-const address = toRef(mySorobanContext.value, "address")
-
-const handleConnect = () => {
-  if (!setActiveConnectorAndConnect) return;
-  setActiveConnectorAndConnect(browserWallets[0]);
-}
-
-const handleDisconnect = async () => {
-  console.log("Disconnecting");
-  await disconnect();
-}
-</script>

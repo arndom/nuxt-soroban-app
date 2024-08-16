@@ -1,3 +1,12 @@
+<script setup lang="ts">
+  interface Props {
+    username?: string;
+  }
+
+  const props = defineProps<Props>()
+  const defaultName = "anon"
+</script>
+
 <template>
   <div class="chat-image avatar">
     <div class="w-10 rounded-full">
@@ -6,12 +15,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-interface Props {
-  username?: string;
-}
-
-const props = defineProps<Props>()
-const defaultName = "anon"
-</script>

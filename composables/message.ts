@@ -1,1 +1,2 @@
-export const useFetchLastMessage = () => useState<string>('lastMessage', () => "...")
+export const useFetchLastMessage = () =>
+  useState<string>("lastMessage", () => "...");
